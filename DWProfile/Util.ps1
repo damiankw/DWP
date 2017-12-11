@@ -10,9 +10,9 @@ Function Set-Password () {
   $env:USR_PW = $Global:TmpPass
 
   # Remove the temporary password storage
-  Remove-Variable $Global:TmpPass
+  Remove-Variable Global:TmpPass
 
-  Write-Host "Password has been updated. Re-Initialising Credentials ..."
+  Write-Host "DWP:> Password has been updated. Re-Initialising Credentials ..."
 
   Set-Credentials
 }
@@ -49,5 +49,29 @@ Function Display-MOTD () {
 
 # Load the required modules
 Function Load-Modules() {
-  
+  Load-Module-Check ActiveDirectory
+  Load-Module-Check Hyper-V
+  Load-Module-Check GroupPolicy
+  Load-Module-Check Asshole
+}
+
+Function Load-Module-Check($Module) {
+  $ErrorActionPreference = "Stop";
+  Write-Host -NoNewline "DWP:> Loading $Module Module ... "
+
+  Try {
+    Import-Module $Module | Out-Null
+    Write-Host "OK!"
+  } Catch {
+    Write-Warning "FAILED!"
+  }
+
+  $ErrorActionPreference = "Continue";
+}
+
+Function Connect-Office365() {
+  $ErrorActionPreference = "Stop";
+  $Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $Global:USR_365 -Authentication Basic -AllowRedirection
+  Import-PSSession $Session
+  $ErrorActionPreference = "Continue";
 }

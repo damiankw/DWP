@@ -4,10 +4,9 @@ Try {
   $ProfilePath = Split-Path $profile
   
   Get-ChildItem $ProfilePath\DWProfile | ForEach { . $ProfilePath\DWProfile\$_ }
-} Catch {
-  Write-Host "ERROR!"
-} Finally {
   Write-Host "OK!"
+} Catch {
+  Write-Host "FAILED!"
 }
 
 Write-Host -NoNewline "DWP:> Checking password environment variable ..."
@@ -21,16 +20,27 @@ If ($env:USR_PW -eq $null) {
   Write-Host "OK!"
 }
 
-Write-Host "DWP:> Loading PS Modules ..."
+# Configure user credentials
+Write-Host -NoNewline "DWP:> Configuring user credentials ... "
+Try {
+  Set-Credentials
+  Write-Host "OK!"
+} Catch {
+  Write-Host "FAILED!"
+}
 
-Load-Modules
 # Load PowerShell Modules
-Import-module ActiveDirectory
-Import-Module Hyper-V
-Import-Module GroupPolicy
-Import-Module ServerManager
+Write-Host "DWP:> Loading PS Modules ..."
+Load-Modules
 
-# Load DWProfile Core Scripts
+# Connect O365
+Write-Host -NoNewline "DWP:> Connecting to Office 365 ... "
+Try {
+  Connect-Office365
+  Write-Host "OK!"
+} Catch {
+  Write-Warning "FAILED!"
+}
 
 
 # Load custom scripts
