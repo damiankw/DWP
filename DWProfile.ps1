@@ -20,10 +20,14 @@ If ($env:USR_PW -eq $null) {
   Write-Host "OK!"
 }
 
+# Start tracking modules/scripts
+$Global:DWPLoaded = @()
+
 # Configure user credentials
 Write-Host -NoNewline "DWP:> Configuring user credentials ... "
 Try {
   Set-Credentials
+  $Global:DWPLoaded = $Global:DWPLoaded + "Credentials"
   Write-Host "OK!"
 } Catch {
   Write-Host "FAILED!"
@@ -33,17 +37,12 @@ Try {
 Write-Host "DWP:> Loading PS Modules ..."
 Load-Modules
 
-# Connect O365
-Write-Host -NoNewline "DWP:> Connecting to Office 365 ... "
-Try {
-  Connect-Office365
-  Write-Host "OK!"
-} Catch {
-  Write-Warning "FAILED!"
-}
-
+#Write-Host "DWP:> Connecting Exchange."
+#Connect-Exchange
 
 # Load custom scripts
 # Load custom alias
 # Start logging (not sure if we need this)
 # 
+
+Display-MOTD

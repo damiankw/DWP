@@ -32,19 +32,19 @@ Function AD () {
 
 # Print out the MOTD
 Function Display-MOTD () {
-  Clear-Host
-  Write-Host ("     --------------------------------------------------------------------------------------------------------------")
-  Write-Host ("     |                                                                                                            |")
-  Write-Host ("     |      '/yo///+++y        +N.       'mmho///ommmm:    -/smmmm.    ommmd//        dy       :+dmmms   :+do/    |")
-  Write-Host ("     |     /NMs     'hm       -MMd       'Ms    -NMMN:       /yMMMd   .hNMMm         yMM+        hsMMMm.   h.     |")
-  Write-Host ("     |    +MMM/      '+      .dMMMs      'o    +MMMm.        /o+MMM+  h.NMMm        +NMMM-       h':NMMN/  h.     |")
-  Write-Host ("     |    NMMM/             'h.yMMM/         'yMMMy'         /o dMMN.++ NMMm       :s.NMMm'      h' 'hMMMy'h.     |")
-  Write-Host ("     |    NMMM/  .......'   y- 'mMMN.       .dMMM+           /o -MMMdh  NMMm      .h  :MMMh      h'   +MMMmd.     |")
-  Write-Host ("     |    oMMM/  .-hMMM/'  oy+++oNMMm'     :NMMN:    sh      /o  oMMM.  NMMm     'ho+++hMMMo     h'    -mMMM.     |")
-  Write-Host ("     |     +NM+    yMMN.  /s     /MMMy    oMMMd.   'sMh      /o   mMo   NMMm     y-     hMMM-    h'     'hMM.     |")
-  Write-Host ("     |      '+ho++ody/' /omo/'  :/dNNNo/ oNNNm+//+smNNs    -/yh+- -d  //mNNm//'/yd+:   /oNNNd/-:+mo/.     +M.     |")
-  Write-Host ("     |                                                                                                            |")
-  Write-Host ("     --------------------------------------------------------------------------------------------------------------")
+  #Clear-Host
+  Write-Host (" ----------------------------------------------------------------------------------------------------------------------")
+  Write-Host (" |                                                                                                      |      AD     |")
+  Write-Host (" |   '/yo///+++y        +N.       'mmho///ommmm:    -/smmmm.    ommmd//        dy       :+dmmms   :+do/ | Credentials |")
+  Write-Host (" |  /NMs     'hm       -MMd       'Ms    -NMMN:       /yMMMd   .hNMMm         yMM+        hsMMMm.   h.  |   Hyper-V   |")
+  Write-Host (" | +MMM/      '+      .dMMMs      'o    +MMMm.        /o+MMM+  h.NMMm        +NMMM-       h':NMMN/  h.  |     GPO     |")
+  Write-Host (" | NMMM/             'h.yMMM/         'yMMMy'         /o dMMN.++ NMMm       :s.NMMm'      h' 'hMMMy'h.  |     O365    |")
+  Write-Host (" | NMMM/  .......'   y- 'mMMN.       .dMMM+           /o -MMMdh  NMMm      .h  :MMMh      h'   +MMMmd.  |   Exchange  |")
+  Write-Host (" | oMMM/  .-hMMM/'  oy+++oNMMm'     :NMMN:    sh      /o  oMMM.  NMMm     'ho+++hMMMo     h'    -mMMM.  |  ")
+  Write-Host (" |  +NM+    yMMN.  /s     /MMMy    oMMMd.   'sMh      /o   mMo   NMMm     y-     hMMM-    h'     'hMM.  |  ")
+  Write-Host (" |   '+ho++ody/' /omo/'  :/dNNNo/ oNNNm+//+smNNs    -/yh+- -d  //mNNm//'/yd+:   /oNNNd/-:+mo/.     +M.  |  ")
+  Write-Host (" |                                                                                                      |  ")
+  Write-Host (" ----------------------------------------------------------------------------------------------------------------------")
 }
 
 # Load the required modules
@@ -61,6 +61,7 @@ Function Load-Module-Check($Module) {
 
   Try {
     Import-Module $Module | Out-Null
+    $Global:DWPLoaded = $Global:DWPLoaded + $Module
     Write-Host "OK!"
   } Catch {
     Write-Warning "FAILED!"
@@ -70,8 +71,23 @@ Function Load-Module-Check($Module) {
 }
 
 Function Connect-Office365() {
-  $ErrorActionPreference = "Stop";
   $Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri https://outlook.office365.com/powershell-liveid/ -Credential $Global:USR_365 -Authentication Basic -AllowRedirection
-  Import-PSSession $Session
-  $ErrorActionPreference = "Continue";
+  Import-PSSession $Session -DisableNameChecking | Out-Null
+}
+
+Function Connect-Exchange() {
+  $Session = New-PSSession -ConfigurationName Microsoft.Exchange -ConnectionUri http://$($Global:EXCH)/PowerShell/ -Authentication Kerberos -Credential $Global:USR_ADM
+  Import-PSSession $Session -DisableNameChecking | Out-Null
+}
+
+Function Check-MailboxSize() {
+  Param(
+    [String]$User = ""
+  )
+
+  If ($User -eq "") {
+    Get-MailboxStatistics -Server $Global:EXCH | Select DisplayName, ItemCount, TotalItemSize | Sort-Object TotalItemSize -Descending
+  } Else {
+    Get-MailboxStatistics -Identity $User | select DisplayName, ItemCount, TotalItemSize| Sort-Object TotalItemSize -Descending
+  }
 }
